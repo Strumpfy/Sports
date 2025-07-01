@@ -226,6 +226,18 @@ frontend:
         agent: "testing"
         comment: "Responsive design works on different screen sizes (desktop, tablet, mobile). Layout adjusts appropriately with proper spacing and sizing for smaller screens."
 
+  - task: "Bet Adding Feature"
+    implemented: false
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Planning to implement manual bet entry form and OCR-based bet slip image processing using Tesseract.js with Sport Book field"
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
