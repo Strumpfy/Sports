@@ -504,12 +504,20 @@ const AddBetModal = ({ isOpen, onClose, onAddBet }) => {
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('Events');
+  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' or 'calendar'
   const [isAddBetModalOpen, setIsAddBetModalOpen] = useState(false);
   const [userBets, setUserBets] = useState([]);
   const [userTransactions, setUserTransactions] = useState(transactions);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   const handleAddBet = (newBet) => {
-    setUserBets(prev => [newBet, ...prev]);
+    const betWithStatus = {
+      ...newBet,
+      status: 'Pending',
+      dateAdded: new Date().toISOString()
+    };
+    
+    setUserBets(prev => [betWithStatus, ...prev]);
     
     // Add to transactions as well
     const transaction = {
@@ -524,6 +532,114 @@ const Dashboard = () => {
     };
     
     setUserTransactions(prev => [transaction, ...prev.slice(0, 4)]);
+  };
+
+  const handleBetStatusChange = (betId, newStatus) => {
+    setUserBets(prev => 
+      prev.map(bet => {
+        if (bet.id === betId) {
+          const updatedBet = { ...bet, status: newStatus };
+          
+          // Add transaction for win/loss
+          if (newStatus === 'Won' || newStatus === 'Lost') {
+            const amount = newStatus === 'Won' 
+              ? parseFloat(bet.potentialPayout || bet.amount) 
+              : -parseFloat(bet.amount);
+            
+            const transaction = {
+              id: Date.now() + Math.random(),
+              type: newStatus === 'Won' ? 'Income' : 'Loss',
+              amount: amount,
+              time: new Date().toLocaleString(),
+              game: bet.betType || 'Bet',
+              positive: newStatus === 'Won',
+              sportsBook: bet.sportsBook,
+              teams: bet.teams
+            };
+            
+            setUserTransactions(prev => [transaction, ...prev.slice(0, 4)]);
+          }
+          
+          return updatedBet;
+        }
+        return bet;
+      })
+    );
+  };
+
+  // Calculate daily performance for calendar
+  const getDayPerformance = (date) => {
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+    
+    const dayBets = userBets.filter(bet => {
+      const betDate = new Date(bet.dateAdded);
+      return betDate >= dayStart && betDate <= dayEnd && bet.status !== 'Pending';
+    });
+    
+    const wins = dayBets.filter(bet => bet.status === 'Won').length;
+    const losses = dayBets.filter(bet => bet.status === 'Lost').length;
+    const totalProfit = dayBets.reduce((sum, bet) => {
+      if (bet.status === 'Won') {
+        return sum + parseFloat(bet.potentialPayout || bet.amount);
+      } else if (bet.status === 'Lost') {
+        return sum - parseFloat(bet.amount);
+      }
+      return sum;
+    }, 0);
+    
+    return { wins, losses, totalProfit, totalBets: dayBets.length };
+  };
+
+  // Generate calendar data for current month
+  const generateCalendarData = () => {
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    
+    const calendarDays = [];
+    
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      calendarDays.push(null);
+    }
+    
+    // Add days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const performance = getDayPerformance(date);
+      calendarDays.push({
+        date,
+        day,
+        performance
+      });
+    }
+    
+    return calendarDays;
+  };
+
+  // Calculate overall statistics
+  const calculateStats = () => {
+    const wonBets = userBets.filter(bet => bet.status === 'Won');
+    const lostBets = userBets.filter(bet => bet.status === 'Lost');
+    const pendingBets = userBets.filter(bet => bet.status === 'Pending');
+    
+    const totalProfit = wonBets.reduce((sum, bet) => sum + parseFloat(bet.potentialPayout || bet.amount), 0) -
+                       lostBets.reduce((sum, bet) => sum + parseFloat(bet.amount), 0);
+    
+    return {
+      totalBets: userBets.length,
+      wonBets: wonBets.length,
+      lostBets: lostBets.length,
+      pendingBets: pendingBets.length,
+      totalProfit,
+      winRate: userBets.length > 0 ? ((wonBets.length / (wonBets.length + lostBets.length)) * 100).toFixed(1) : 0
+    };
   };
 
   return (
