@@ -810,6 +810,42 @@ const Dashboard = () => {
               </div>
             </div>
 
+            {/* User Bets */}
+            {userBets.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-white font-semibold mb-3">Your Active Bets</h4>
+                <div className="space-y-3">
+                  {userBets.slice(0, 3).map((bet) => (
+                    <div key={bet.id} className="bg-gray-700 rounded-xl p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-lime-600 rounded-lg flex items-center justify-center">
+                            <span className="text-white font-bold text-xs">
+                              {bet.sportsBook.slice(0, 2).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <h4 className="text-white font-semibold">
+                              {bet.teams || `${bet.sport} ${bet.betType}`}
+                            </h4>
+                            <p className="text-gray-400 text-sm">
+                              {bet.sportsBook} • {bet.betType} • {bet.odds}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-white font-bold">${bet.amount}</div>
+                          <div className="text-lime-400 text-sm">
+                            Win: ${bet.potentialPayout || 'TBD'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Best Players */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
