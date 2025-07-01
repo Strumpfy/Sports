@@ -242,3 +242,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Completed full implementation of sports betting dashboard with dark theme, multiple chart types, user profile, and dynamic widgets. Ready for comprehensive testing to verify all functionality works correctly."
+  - agent: "testing"
+    message: "Completed comprehensive testing of the sports betting dashboard. All components are working correctly: dark theme is properly applied, sidebar navigation is fixed and functional, all stat cards display correct values with percentage indicators, charts and visualizations show accurate data, user profile panel displays correctly, dynamic content widgets function as expected, and responsive design works on different screen sizes. No issues were found during testing."
