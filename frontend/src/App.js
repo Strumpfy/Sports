@@ -31,7 +31,12 @@ import {
   X,
   Upload,
   Camera,
-  Loader2
+  Loader2,
+  CheckCircle,
+  XCircle,
+  Clock,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import Tesseract from 'tesseract.js';
 
