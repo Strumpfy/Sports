@@ -71,10 +71,10 @@ const transactions = [
 ];
 
 const bestPlayers = [
-  { id: 1, name: 'Player 1', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face' },
-  { id: 2, name: 'Player 2', avatar: 'https://images.unsplash.com/photo-1494790108755-2616b67d2c78?w=40&h=40&fit=crop&crop=face' },
-  { id: 3, name: 'Player 3', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face' },
-  { id: 4, name: 'Player 4', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face' }
+  { id: 1, name: 'PSG', avatar: 'https://images.pexels.com/photos/9884917/pexels-photo-9884917.jpeg?w=40&h=40&fit=crop' },
+  { id: 2, name: 'Capitals', avatar: 'https://images.unsplash.com/photo-1631607054640-876e1cd7ea27?w=40&h=40&fit=crop' },
+  { id: 3, name: 'Porsche', avatar: 'https://images.unsplash.com/photo-1710161468204-9a92f533d7d6?w=40&h=40&fit=crop' },
+  { id: 4, name: 'Ice Family', avatar: 'https://images.unsplash.com/photo-1728555864830-499254793e04?w=40&h=40&fit=crop' }
 ];
 
 const StatCard = ({ title, value, change, changeType, bgColor, icon: Icon }) => (
