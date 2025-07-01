@@ -499,9 +499,37 @@ const AddBetModal = ({ isOpen, onClose, onAddBet }) => {
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('Events');
+  const [isAddBetModalOpen, setIsAddBetModalOpen] = useState(false);
+  const [userBets, setUserBets] = useState([]);
+  const [userTransactions, setUserTransactions] = useState(transactions);
+
+  const handleAddBet = (newBet) => {
+    setUserBets(prev => [newBet, ...prev]);
+    
+    // Add to transactions as well
+    const transaction = {
+      id: Date.now() + 1,
+      type: 'Bet Placed',
+      amount: -parseFloat(newBet.amount),
+      time: new Date().toLocaleString(),
+      game: newBet.betType || 'Bet',
+      positive: false,
+      sportsBook: newBet.sportsBook,
+      teams: newBet.teams
+    };
+    
+    setUserTransactions(prev => [transaction, ...prev]);
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      {/* Add Bet Modal */}
+      <AddBetModal 
+        isOpen={isAddBetModalOpen}
+        onClose={() => setIsAddBetModalOpen(false)}
+        onAddBet={handleAddBet}
+      />
+      
       {/* Sidebar */}
       <div className="fixed left-0 top-0 h-full w-16 bg-gray-800 flex flex-col items-center py-6 space-y-6 z-10">
         <div className="w-8 h-8 bg-lime-400 rounded-lg flex items-center justify-center">
@@ -538,9 +566,13 @@ const Dashboard = () => {
                 className="bg-gray-800 rounded-lg pl-10 pr-4 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-lime-400"
               />
             </div>
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+            <button 
+              onClick={() => setIsAddBetModalOpen(true)}
+              className="w-10 h-10 bg-lime-400 hover:bg-lime-500 rounded-full flex items-center justify-center transition-colors"
+              title="Add New Bet"
+            >
               <Plus className="w-5 h-5 text-gray-900" />
-            </div>
+            </button>
             <Bell className="w-6 h-6 text-gray-400" />
           </div>
         </div>
