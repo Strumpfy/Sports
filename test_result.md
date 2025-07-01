@@ -245,7 +245,7 @@ frontend:
         comment: "Tested the bet adding feature comprehensively. The lime-colored plus button in the header opens the modal correctly. The modal has proper styling with a dark theme matching the rest of the app. The form includes all required fields: Sport Book dropdown (with options like DraftKings, FanDuel, BetMGM), Bet Type, Sport, Teams/Event, League, Bet Amount, Odds, and Potential Payout. The Sport Book and Amount fields are properly marked as required. Automatic payout calculation works correctly when entering amount and odds. The image upload section displays properly with camera icon and instructions. Form submission works with minimal required fields (Sport Book + Amount), and the bet appears in the 'Your Active Bets' section under the Events tab with correct formatting. The modal can be closed using both the X button and Cancel button. Minor issue: The sportsbook abbreviation in the bet card doesn't display exactly as expected, and the transaction doesn't immediately appear in the transactions feed, but these are minor UI issues that don't affect core functionality."
 
   - task: "Bet Status Tracking & Calendar View"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "/app/frontend/src/App.js"
     stuck_count: 0
@@ -255,6 +255,9 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "Planning to implement bet status tracking (Win/Loss/Pending) with clickable status selection and calendar view showing daily win/loss amounts with pie chart analytics"
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented comprehensive bet status tracking with clickable Won/Lost/Pending buttons on bet cards, calendar view with GitHub-style heatmap showing daily performance, pie charts for bet outcomes and sportsbook distribution, monthly navigation, statistics overview cards, and automatic transaction updates when bet status changes."
 
 metadata:
   created_by: "main_agent"
