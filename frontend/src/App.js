@@ -136,6 +136,367 @@ const StatCard = ({ title, value, change, changeType, bgColor, icon: Icon }) => 
   </div>
 );
 
+const AddBetModal = ({ isOpen, onClose, onAddBet }) => {
+  const [betData, setBetData] = useState({
+    sportsBook: '',
+    betType: '',
+    sport: '',
+    teams: '',
+    amount: '',
+    odds: '',
+    potentialPayout: '',
+    league: ''
+  });
+  
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [extractedText, setExtractedText] = useState('');
+
+  const handleInputChange = (field, value) => {
+    setBetData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Auto-calculate potential payout when amount or odds change
+    if (field === 'amount' || field === 'odds') {
+      const amount = field === 'amount' ? parseFloat(value) : parseFloat(betData.amount);
+      const odds = field === 'odds' ? value : betData.odds;
+      
+      if (amount && odds) {
+        let payout = 0;
+        if (odds.startsWith('+')) {
+          // American odds positive
+          const oddsNum = parseFloat(odds.slice(1));
+          payout = amount * (oddsNum / 100);
+        } else if (odds.startsWith('-')) {
+          // American odds negative
+          const oddsNum = parseFloat(odds.slice(1));
+          payout = amount * (100 / oddsNum);
+        } else if (odds.includes('.')) {
+          // Decimal odds
+          payout = amount * (parseFloat(odds) - 1);
+        }
+        
+        setBetData(prev => ({
+          ...prev,
+          potentialPayout: payout.toFixed(2)
+        }));
+      }
+    }
+  };
+
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      setImagePreview(e.target.result);
+      setIsProcessingImage(true);
+      
+      try {
+        const result = await Tesseract.recognize(e.target.result, 'eng', {
+          logger: m => console.log(m)
+        });
+        
+        const text = result.data.text;
+        setExtractedText(text);
+        
+        // Smart parsing of bet slip text
+        const parsedData = parseBetSlipText(text);
+        setBetData(prev => ({
+          ...prev,
+          ...parsedData
+        }));
+        
+      } catch (error) {
+        console.error('OCR Error:', error);
+        alert('Error processing image. Please try again or enter manually.');
+      } finally {
+        setIsProcessingImage(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const parseBetSlipText = (text) => {
+    const parsed = {};
+    const lines = text.toLowerCase().split('\n');
+    
+    // Try to extract common sportsbook names
+    const sportsbookPatterns = {
+      'draftkings': 'DraftKings',
+      'fanduel': 'FanDuel',
+      'betmgm': 'BetMGM',
+      'caesars': 'Caesars',
+      'pointsbet': 'PointsBet'
+    };
+    
+    for (const [pattern, name] of Object.entries(sportsbookPatterns)) {
+      if (text.toLowerCase().includes(pattern)) {
+        parsed.sportsBook = name;
+        break;
+      }
+    }
+    
+    // Try to extract bet amount
+    const amountMatch = text.match(/\$(\d+(?:\.\d{2})?)/);
+    if (amountMatch) {
+      parsed.amount = amountMatch[1];
+    }
+    
+    // Try to extract odds
+    const oddsMatch = text.match(/([+-]\d+)|(\d+\.\d+)/);
+    if (oddsMatch) {
+      parsed.odds = oddsMatch[0];
+    }
+    
+    // Try to identify bet type
+    if (text.toLowerCase().includes('parlay')) {
+      parsed.betType = 'Parlay';
+    } else if (text.toLowerCase().includes('teaser')) {
+      parsed.betType = 'Teaser';
+    } else {
+      parsed.betType = 'Single';
+    }
+    
+    // Try to identify sport
+    const sportPatterns = {
+      'nfl': 'Football (NFL)',
+      'nba': 'Basketball (NBA)',
+      'mlb': 'Baseball (MLB)',
+      'nhl': 'Hockey (NHL)',
+      'mls': 'Soccer (MLS)'
+    };
+    
+    for (const [pattern, sport] of Object.entries(sportPatterns)) {
+      if (text.toLowerCase().includes(pattern)) {
+        parsed.sport = sport;
+        break;
+      }
+    }
+    
+    return parsed;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!betData.sportsBook || !betData.amount) {
+      alert('Please fill in at least Sport Book and Amount fields');
+      return;
+    }
+    
+    const newBet = {
+      id: Date.now(),
+      ...betData,
+      timestamp: new Date().toISOString(),
+      status: 'Active'
+    };
+    
+    onAddBet(newBet);
+    setBetData({
+      sportsBook: '',
+      betType: '',
+      sport: '',
+      teams: '',
+      amount: '',
+      odds: '',
+      potentialPayout: '',
+      league: ''
+    });
+    setImagePreview(null);
+    setExtractedText('');
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <h2 className="text-2xl font-bold text-white">Add New Bet</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        
+        <div className="p-6">
+          {/* Image Upload Section */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-white mb-3">📷 Upload Bet Slip (Optional)</h3>
+            <div className="border-2 border-dashed border-gray-600 rounded-lg p-4 hover:border-lime-400 transition-colors">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageUpload(e.target.files[0])}
+                className="hidden"
+                id="bet-slip-upload"
+              />
+              <label htmlFor="bet-slip-upload" className="cursor-pointer flex flex-col items-center">
+                <Camera className="w-12 h-12 text-gray-400 mb-2" />
+                <span className="text-gray-400">Click to upload bet slip image</span>
+                <span className="text-sm text-gray-500">We'll try to extract bet details automatically</span>
+              </label>
+            </div>
+            
+            {isProcessingImage && (
+              <div className="flex items-center justify-center mt-4">
+                <Loader2 className="w-6 h-6 animate-spin text-lime-400" />
+                <span className="ml-2 text-white">Processing image...</span>
+              </div>
+            )}
+            
+            {imagePreview && (
+              <div className="mt-4">
+                <img src={imagePreview} alt="Bet slip preview" className="max-w-full h-32 object-contain rounded-lg" />
+              </div>
+            )}
+          </div>
+
+          {/* Manual Entry Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-white font-medium mb-2">Sport Book *</label>
+                <select
+                  value={betData.sportsBook}
+                  onChange={(e) => handleInputChange('sportsBook', e.target.value)}
+                  className="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                  required
+                >
+                  <option value="">Select Sport Book</option>
+                  {sportsBooks.map(book => (
+                    <option key={book} value={book}>{book}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-white font-medium mb-2">Bet Type</label>
+                <select
+                  value={betData.betType}
+                  onChange={(e) => handleInputChange('betType', e.target.value)}
+                  className="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                >
+                  <option value="">Select Bet Type</option>
+                  {betTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-white font-medium mb-2">Sport</label>
+                <select
+                  value={betData.sport}
+                  onChange={(e) => handleInputChange('sport', e.target.value)}
+                  className="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                >
+                  <option value="">Select Sport</option>
+                  {sports.map(sport => (
+                    <option key={sport} value={sport}>{sport}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-white font-medium mb-2">League</label>
+                <input
+                  type="text"
+                  value={betData.league}
+                  onChange={(e) => handleInputChange('league', e.target.value)}
+                  placeholder="e.g., NFL, NBA, Premier League"
+                  className="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-white font-medium mb-2">Teams/Event</label>
+              <input
+                type="text"
+                value={betData.teams}
+                onChange={(e) => handleInputChange('teams', e.target.value)}
+                placeholder="e.g., Lakers vs Warriors, Over 45.5 Points"
+                className="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-lime-400"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-white font-medium mb-2">Bet Amount *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={betData.amount}
+                  onChange={(e) => handleInputChange('amount', e.target.value)}
+                  placeholder="100.00"
+                  className="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-white font-medium mb-2">Odds</label>
+                <input
+                  type="text"
+                  value={betData.odds}
+                  onChange={(e) => handleInputChange('odds', e.target.value)}
+                  placeholder="-110, +250, 2.50"
+                  className="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-white font-medium mb-2">Potential Payout</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={betData.potentialPayout}
+                  onChange={(e) => handleInputChange('potentialPayout', e.target.value)}
+                  placeholder="190.91"
+                  className="w-full bg-gray-700 text-white rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                />
+              </div>
+            </div>
+
+            {extractedText && (
+              <div className="mt-4">
+                <label className="block text-white font-medium mb-2">Extracted Text (for reference)</label>
+                <textarea
+                  value={extractedText}
+                  readOnly
+                  className="w-full bg-gray-700 text-gray-300 rounded-lg p-3 h-20 text-sm"
+                />
+              </div>
+            )}
+
+            <div className="flex space-x-4 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 bg-lime-600 hover:bg-lime-700 text-white py-3 rounded-lg font-medium transition-colors"
+              >
+                Add Bet
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('Events');
 
