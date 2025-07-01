@@ -812,12 +812,12 @@ const Dashboard = ({
               </div>
             </div>
 
-            {/* User Bets */}
-            {userBets.length > 0 && (
+            {/* User Bets - Active */}
+            {userBets.filter(bet => bet.status === 'Pending').length > 0 && (
               <div className="mb-4">
                 <h4 className="text-white font-semibold mb-3">Your Active Bets</h4>
                 <div className="space-y-3">
-                  {userBets.slice(0, 3).map((bet) => (
+                  {userBets.filter(bet => bet.status === 'Pending').slice(0, 3).map((bet) => (
                     <div key={bet.id} className="bg-gray-700 rounded-xl p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
@@ -848,41 +848,84 @@ const Dashboard = ({
                         </div>
                       </div>
                       
-                      {/* Status Selection Buttons */}
+                      {/* Status Selection Buttons - Only for Pending bets */}
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleBetStatusChange(bet.id, 'Won')}
-                          className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                            bet.status === 'Won' 
-                              ? 'bg-green-600 text-white' 
-                              : 'bg-gray-600 text-gray-300 hover:bg-green-600 hover:text-white'
-                          }`}
+                          className="flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors bg-gray-600 text-gray-300 hover:bg-green-600 hover:text-white"
                         >
                           <CheckCircle className="w-4 h-4" />
                           <span>Won</span>
                         </button>
                         <button
                           onClick={() => handleBetStatusChange(bet.id, 'Lost')}
-                          className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                            bet.status === 'Lost' 
-                              ? 'bg-red-600 text-white' 
-                              : 'bg-gray-600 text-gray-300 hover:bg-red-600 hover:text-white'
-                          }`}
+                          className="flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors bg-gray-600 text-gray-300 hover:bg-red-600 hover:text-white"
                         >
                           <XCircle className="w-4 h-4" />
                           <span>Lost</span>
                         </button>
-                        <button
-                          onClick={() => handleBetStatusChange(bet.id, 'Pending')}
-                          className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                            bet.status === 'Pending' 
-                              ? 'bg-yellow-600 text-white' 
-                              : 'bg-gray-600 text-gray-300 hover:bg-yellow-600 hover:text-white'
-                          }`}
-                        >
+                        <div className="flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium bg-yellow-600 text-white">
                           <Clock className="w-4 h-4" />
                           <span>Pending</span>
-                        </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* User Bets - Completed */}
+            {userBets.filter(bet => bet.status === 'Won' || bet.status === 'Lost').length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-white font-semibold mb-3">Completed Bets</h4>
+                <div className="space-y-3">
+                  {userBets.filter(bet => bet.status === 'Won' || bet.status === 'Lost').slice(0, 3).map((bet) => (
+                    <div key={bet.id} className="bg-gray-700 rounded-xl p-4 opacity-75">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            bet.status === 'Won' ? 'bg-green-600' : 'bg-red-600'
+                          }`}>
+                            <span className="text-white font-bold text-xs">
+                              {bet.sportsBook === 'DraftKings' ? 'DK' : 
+                               bet.sportsBook === 'FanDuel' ? 'FD' :
+                               bet.sportsBook === 'BetMGM' ? 'MGM' :
+                               bet.sportsBook === 'Caesars' ? 'CZR' :
+                               bet.sportsBook === 'PointsBet' ? 'PB' :
+                               bet.sportsBook.slice(0, 2).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <h4 className="text-white font-semibold">
+                              {bet.teams || `${bet.sport} ${bet.betType}`}
+                            </h4>
+                            <p className="text-gray-400 text-sm">
+                              {bet.sportsBook} • {bet.betType} • {bet.odds}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-white font-bold">${bet.amount}</div>
+                          <div className={`text-sm font-semibold ${
+                            bet.status === 'Won' ? 'text-green-400' : 'text-red-400'
+                          }`}>
+                            {bet.status === 'Won' ? `+$${bet.potentialPayout || bet.amount}` : '-$' + bet.amount}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Status Display - No longer clickable */}
+                      <div className="flex space-x-2">
+                        <div className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium ${
+                          bet.status === 'Won' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+                        }`}>
+                          {bet.status === 'Won' ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                          <span>{bet.status}</span>
+                        </div>
+                        <div className="text-gray-400 text-sm px-3 py-1">
+                          Completed: {new Date(bet.completedDate).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
                   ))}
