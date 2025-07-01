@@ -657,9 +657,15 @@ const Dashboard = () => {
           <div className="w-4 h-4 bg-gray-900 rounded-sm"></div>
         </div>
         <nav className="flex flex-col space-y-4">
-          <Home className="w-6 h-6 text-lime-400" />
+          <Home 
+            className={`w-6 h-6 cursor-pointer ${currentView === 'dashboard' ? 'text-lime-400' : 'text-gray-400 hover:text-white'}`}
+            onClick={() => setCurrentView('dashboard')}
+          />
           <TrendingUp className="w-6 h-6 text-gray-400 hover:text-white cursor-pointer" />
-          <Calendar className="w-6 h-6 text-gray-400 hover:text-white cursor-pointer" />
+          <Calendar 
+            className={`w-6 h-6 cursor-pointer ${currentView === 'calendar' ? 'text-lime-400' : 'text-gray-400 hover:text-white'}`}
+            onClick={() => setCurrentView('calendar')}
+          />
           <Users className="w-6 h-6 text-gray-400 hover:text-white cursor-pointer" />
           <Settings className="w-6 h-6 text-gray-400 hover:text-white cursor-pointer" />
         </nav>
