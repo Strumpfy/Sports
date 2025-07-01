@@ -27,8 +27,13 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   User,
-  DollarSign
+  DollarSign,
+  X,
+  Upload,
+  Camera,
+  Loader2
 } from 'lucide-react';
+import Tesseract from 'tesseract.js';
 
 // Sample Data
 const dashboardStats = {
