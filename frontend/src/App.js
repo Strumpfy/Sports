@@ -1,54 +1,447 @@
-import { useEffect } from "react";
-import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import React, { useState, useEffect } from 'react';
+import './App.css';
+import { 
+  PieChart, 
+  Pie, 
+  Cell, 
+  BarChart, 
+  Bar, 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  ResponsiveContainer,
+  Tooltip,
+  Legend
+} from 'recharts';
+import {
+  Home,
+  TrendingUp,
+  Calendar,
+  Users,
+  Settings,
+  Search,
+  Bell,
+  Plus,
+  MoreHorizontal,
+  ArrowUpRight,
+  ArrowDownRight,
+  User,
+  DollarSign
+} from 'lucide-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// Sample Data
+const dashboardStats = {
+  totalIncome: 3433.0,
+  totalPayers: 11443,
+  totalTime: 11443,
+  totalWagered: 3433.0,
+  percentageOfTotalBets: 34,
+  eventCount: 35
+};
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
+const sportCategoriesData = [
+  { name: 'Soccer', value: 1200, color: '#84CC16', icon: '⚽' },
+  { name: 'Basketball', value: 800, color: '#F59E0B', icon: '🏀' },
+  { name: 'Baseball', value: 600, color: '#EF4444', icon: '⚾' },
+  { name: 'Football', value: 400, color: '#8B5CF6', icon: '🏈' },
+  { name: 'Tennis', value: 223.55, color: '#06B6D4', icon: '🎾' }
+];
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+const leaguesData = [
+  { name: 'NFL', percentage: 38, color: '#84CC16' },
+  { name: 'NHL', percentage: 78, color: '#F59E0B' },
+  { name: 'NBA', percentage: 78, color: '#EF4444' }
+];
+
+const fundsActivityData = [
+  { day: 'Sat', active: 1443, playing: 440 },
+  { day: 'Mon', active: 1200, playing: 520 },
+  { day: 'Tue', active: 1600, playing: 380 },
+  { day: 'Wed', active: 1300, playing: 600 },
+  { day: 'Thu', active: 1800, playing: 320 },
+  { day: 'Fri', active: 1500, playing: 450 },
+  { day: 'Sat', active: 1443, playing: 440 }
+];
+
+const transactions = [
+  { id: 1, type: 'Income', amount: 445, time: '22 Dec at 01:32 am', game: 'Parlay', positive: true },
+  { id: 2, type: 'Loss', amount: -230, time: '21 Dec at 11:15 pm', game: 'Single', positive: false },
+  { id: 3, type: 'Income', amount: 120, time: '21 Dec at 06:45 pm', game: 'Parlay', positive: true }
+];
+
+const bestPlayers = [
+  { id: 1, name: 'Player 1', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face' },
+  { id: 2, name: 'Player 2', avatar: 'https://images.unsplash.com/photo-1494790108755-2616b67d2c78?w=40&h=40&fit=crop&crop=face' },
+  { id: 3, name: 'Player 3', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face' },
+  { id: 4, name: 'Player 4', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face' }
+];
+
+const StatCard = ({ title, value, change, changeType, bgColor, icon: Icon }) => (
+  <div className={`${bgColor} rounded-2xl p-6 relative overflow-hidden`}>
+    <div className="flex items-center justify-between mb-2">
+      <div className="p-2 bg-black/20 rounded-lg">
+        <Icon className="w-5 h-5 text-white" />
+      </div>
+      <ArrowUpRight className="w-4 h-4 text-white/60" />
+    </div>
+    <div className="text-white/70 text-sm mb-1">{title}</div>
+    <div className="text-white text-2xl font-bold mb-2">
+      {typeof value === 'number' ? (title.includes('$') || title.includes('Income') || title.includes('Wagered') ? `$${value.toLocaleString()}` : value.toLocaleString()) : value}
+    </div>
+    {change && (
+      <div className={`text-sm flex items-center ${changeType === 'positive' ? 'text-green-400' : 'text-red-400'}`}>
+        {changeType === 'positive' ? '+' : ''}{change}%
+      </div>
+    )}
+  </div>
+);
+
+const Dashboard = () => {
+  const [activeTab, setActiveTab] = useState('Events');
 
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Sidebar */}
+      <div className="fixed left-0 top-0 h-full w-16 bg-gray-800 flex flex-col items-center py-6 space-y-6 z-10">
+        <div className="w-8 h-8 bg-lime-400 rounded-lg flex items-center justify-center">
+          <div className="w-4 h-4 bg-gray-900 rounded-sm"></div>
+        </div>
+        <nav className="flex flex-col space-y-4">
+          <Home className="w-6 h-6 text-lime-400" />
+          <TrendingUp className="w-6 h-6 text-gray-400 hover:text-white cursor-pointer" />
+          <Calendar className="w-6 h-6 text-gray-400 hover:text-white cursor-pointer" />
+          <Users className="w-6 h-6 text-gray-400 hover:text-white cursor-pointer" />
+          <Settings className="w-6 h-6 text-gray-400 hover:text-white cursor-pointer" />
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div className="ml-16 p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-2xl font-bold">Dashboard</h1>
+            <div className="flex items-center space-x-2 text-gray-400">
+              <span className="text-lime-400">⚡ Overview</span>
+              <span>⭐ Favorites</span>
+              <span>⚡ PPC</span>
+              <span># Customize</span>
+            </div>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Search" 
+                className="bg-gray-800 rounded-lg pl-10 pr-4 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-lime-400"
+              />
+            </div>
+            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+              <Plus className="w-5 h-5 text-gray-900" />
+            </div>
+            <Bell className="w-6 h-6 text-gray-400" />
+          </div>
+        </div>
+
+        {/* Dashboard Grid */}
+        <div className="grid grid-cols-12 gap-6">
+          {/* Stats Cards - Top Row */}
+          <div className="col-span-3">
+            <StatCard 
+              title="Total Income" 
+              value={dashboardStats.totalIncome}
+              change={4.5}
+              changeType="positive"
+              bgColor="bg-gradient-to-br from-lime-600 to-lime-700"
+              icon={DollarSign}
+            />
+          </div>
+          <div className="col-span-3">
+            <StatCard 
+              title="Total Payers" 
+              value={dashboardStats.totalPayers}
+              bgColor="bg-gradient-to-br from-orange-600 to-orange-700"
+              icon={Users}
+            />
+          </div>
+          <div className="col-span-3">
+            <StatCard 
+              title="Total Time" 
+              value={dashboardStats.totalTime}
+              bgColor="bg-gradient-to-br from-red-600 to-red-700"
+              icon={TrendingUp}
+            />
+          </div>
+
+          {/* User Profile */}
+          <div className="col-span-3 row-span-2 bg-gray-800 rounded-2xl p-6">
+            <div className="flex items-center space-x-4 mb-6">
+              <img 
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face" 
+                alt="John Williams" 
+                className="w-15 h-15 rounded-full"
+              />
+              <div>
+                <h3 className="text-white font-semibold">John Williams</h3>
+                <p className="text-gray-400 text-sm">Last activity:</p>
+                <p className="text-gray-400 text-sm">6 Dec, 2025 at 12:43 pm</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <StatCard 
+                title="Earned" 
+                value={3433.0}
+                change={4.5}
+                changeType="positive"
+                bgColor="bg-gradient-to-br from-lime-600 to-lime-700"
+                icon={ArrowUpRight}
+              />
+              <StatCard 
+                title="Lost" 
+                value={11443}
+                change={5.2}
+                changeType="negative"
+                bgColor="bg-gradient-to-br from-red-600 to-red-700"
+                icon={ArrowDownRight}
+              />
+            </div>
+
+            {/* Funds Activity Chart */}
+            <div>
+              <h4 className="text-white font-semibold mb-4 flex items-center justify-between">
+                Funds Activity
+                <MoreHorizontal className="w-5 h-5 text-gray-400" />
+              </h4>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={fundsActivityData}>
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9CA3AF' }} />
+                  <YAxis hide />
+                  <Line type="monotone" dataKey="active" stroke="#84CC16" strokeWidth={2} dot={{ fill: '#84CC16', r: 4 }} />
+                  <Line type="monotone" dataKey="playing" stroke="#F59E0B" strokeWidth={2} dot={{ fill: '#F59E0B', r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="flex justify-between text-sm mt-2">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-lime-400 rounded-full"></div>
+                  <span className="text-gray-400">Active</span>
+                  <span className="text-white font-semibold">$1,443</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                  <span className="text-gray-400">Playing</span>
+                  <span className="text-white font-semibold">$440</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Second Row Stats */}
+          <div className="col-span-3">
+            <StatCard 
+              title="Total Wagered" 
+              value={dashboardStats.totalWagered}
+              change={4.5}
+              changeType="positive"
+              bgColor="bg-gradient-to-br from-lime-600 to-lime-700"
+              icon={DollarSign}
+            />
+          </div>
+          <div className="col-span-3">
+            <StatCard 
+              title="Percentage of Total Bets" 
+              value={`${dashboardStats.percentageOfTotalBets}%`}
+              change={4.6}
+              changeType="positive"
+              bgColor="bg-gradient-to-br from-gray-700 to-gray-800"
+              icon={TrendingUp}
+            />
+          </div>
+          <div className="col-span-3">
+            <StatCard 
+              title="Event Count" 
+              value={dashboardStats.eventCount}
+              change={4.6}
+              changeType="positive"
+              bgColor="bg-gradient-to-br from-orange-600 to-orange-700"
+              icon={Calendar}
+            />
+          </div>
+
+          {/* Charts Section */}
+          <div className="col-span-6 bg-gray-800 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-white font-semibold text-lg">Top 5 Sport Categories</h3>
+              <MoreHorizontal className="w-5 h-5 text-gray-400" />
+            </div>
+            <div className="flex items-center justify-center">
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={sportCategoriesData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={80}
+                    outerRadius={120}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {sportCategoriesData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-white">
+                    <tspan x="50%" dy="-0.5em" className="text-2xl font-bold">$3,223.55</tspan>
+                    <tspan x="50%" dy="1.5em" className="text-sm fill-gray-400">Total profit</tspan>
+                  </text>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex justify-center space-x-6 mt-4">
+              {sportCategoriesData.map((sport, index) => (
+                <div key={index} className="flex flex-col items-center">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm bg-gray-700`}>
+                    {sport.icon}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="col-span-6 bg-gray-800 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-white font-semibold text-lg">Top 5 Leagues</h3>
+              <MoreHorizontal className="w-5 h-5 text-gray-400" />
+            </div>
+            <div className="space-y-4">
+              {leaguesData.map((league, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center">
+                      <span className="text-xs font-bold">{league.name}</span>
+                    </div>
+                    <span className="text-white font-medium">{league.name}</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-32 bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="h-2 rounded-full"
+                        style={{ 
+                          width: `${league.percentage}%`, 
+                          backgroundColor: league.color 
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-white font-semibold w-8">{league.percentage}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom Section */}
+          <div className="col-span-6 bg-gray-800 rounded-2xl p-6">
+            <div className="flex items-center space-x-6 border-b border-gray-700 mb-6">
+              {['Events', 'Players', 'Bets', 'Plays'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`pb-2 px-1 ${
+                    activeTab === tab 
+                      ? 'text-lime-400 border-b-2 border-lime-400' 
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* Red Sox Event Card */}
+            <div className="bg-gray-700 rounded-xl p-4 mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">RS</span>
+                  </div>
+                  <div>
+                    <h4 className="text-white font-semibold">Red Sox</h4>
+                    <p className="text-gray-400 text-sm">25% Pull</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-lime-400 font-bold">$4,450</div>
+                  <div className="text-gray-400 text-sm">Users: 67 | Funds: $22.4k</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Best Players */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-lime-400">⭐</span>
+                <span className="text-white font-semibold">Best Players</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="text-white font-bold">Pro 4</div>
+                <div className="flex -space-x-2">
+                  {bestPlayers.map((player) => (
+                    <img
+                      key={player.id}
+                      src={player.avatar}
+                      alt={player.name}
+                      className="w-8 h-8 rounded-full border-2 border-gray-800"
+                    />
+                  ))}
+                  <div className="w-8 h-8 bg-gray-600 rounded-full border-2 border-gray-800 flex items-center justify-center">
+                    <span className="text-white text-xs">+145</span>
+                  </div>
+                </div>
+                <Plus className="w-6 h-6 text-gray-400 bg-gray-700 rounded-full p-1" />
+              </div>
+            </div>
+          </div>
+
+          {/* Transactions */}
+          <div className="col-span-3 bg-gray-800 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-white font-semibold text-lg">Transactions</h3>
+              <MoreHorizontal className="w-5 h-5 text-gray-400" />
+            </div>
+            <div className="space-y-4">
+              {transactions.map((transaction) => (
+                <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      transaction.positive ? 'bg-lime-600' : 'bg-red-600'
+                    }`}>
+                      $
+                    </div>
+                    <div>
+                      <div className="text-white font-medium">{transaction.type}</div>
+                      <div className="text-gray-400 text-sm">{transaction.time}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`font-bold ${transaction.positive ? 'text-lime-400' : 'text-red-400'}`}>
+                      {transaction.positive ? '+' : ''}${Math.abs(transaction.amount)}
+                    </div>
+                    <div className="text-gray-400 text-sm">{transaction.game}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
 function App() {
-  return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
-  );
+  return <Dashboard />;
 }
 
 export default App;
