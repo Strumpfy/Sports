@@ -821,7 +821,12 @@ const Dashboard = () => {
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-lime-600 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-xs">
-                              {bet.sportsBook.slice(0, 2).toUpperCase()}
+                              {bet.sportsBook === 'DraftKings' ? 'DK' : 
+                               bet.sportsBook === 'FanDuel' ? 'FD' :
+                               bet.sportsBook === 'BetMGM' ? 'MGM' :
+                               bet.sportsBook === 'Caesars' ? 'CZR' :
+                               bet.sportsBook === 'PointsBet' ? 'PB' :
+                               bet.sportsBook.slice(0, 2).toUpperCase()}
                             </span>
                           </div>
                           <div>
