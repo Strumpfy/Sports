@@ -1246,13 +1246,18 @@ function App() {
     setUserBets(prev => 
       prev.map(bet => {
         if (bet.id === betId) {
-          const updatedBet = { ...bet, status: newStatus };
+          // Prevent changing status if bet is already Won or Lost
+          if (bet.status === 'Won' || bet.status === 'Lost') {
+            return bet;
+          }
           
-          // Add transaction for win/loss
-          if (newStatus === 'Won' || newStatus === 'Lost') {
+          const updatedBet = { ...bet, status: newStatus, completedDate: new Date().toISOString() };
+          
+          // Add transaction for win/loss only if changing from Pending
+          if ((newStatus === 'Won' || newStatus === 'Lost') && bet.status === 'Pending') {
             const amount = newStatus === 'Won' 
               ? parseFloat(bet.potentialPayout || bet.amount) 
-              : -parseFloat(bet.amount);
+              : 0; // Don't subtract again for losses since bet placement already did
             
             const transaction = {
               id: Date.now() + Math.random(),
@@ -1265,7 +1270,7 @@ function App() {
               teams: bet.teams
             };
             
-            setUserTransactions(prev => [transaction, ...prev.slice(0, 4)]);
+            setUserTransactions(prev => [transaction, ...prev.slice(0, 9)]); // Keep only 10 transactions
           }
           
           return updatedBet;
