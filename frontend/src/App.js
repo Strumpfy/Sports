@@ -1261,30 +1261,6 @@ function App() {
   const [userTransactions, setUserTransactions] = useState(transactions);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const handleAddBet = (newBet) => {
-    const betWithStatus = {
-      ...newBet,
-      status: 'Pending',
-      dateAdded: new Date().toISOString()
-    };
-    
-    setUserBets(prev => [betWithStatus, ...prev]);
-    
-    // Add to transactions as well
-    const transaction = {
-      id: Date.now() + 1,
-      type: 'Bet Placed',
-      amount: -parseFloat(newBet.amount),
-      time: new Date().toLocaleString(),
-      game: newBet.betType || 'Bet',
-      positive: false,
-      sportsBook: newBet.sportsBook,
-      teams: newBet.teams
-    };
-    
-    setUserTransactions(prev => [transaction, ...prev.slice(0, 4)]);
-  };
-
   const handleBetStatusChange = (betId, newStatus) => {
     setUserBets(prev => 
       prev.map(bet => {
