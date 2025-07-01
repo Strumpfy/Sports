@@ -1083,6 +1083,258 @@ const Dashboard = () => {
   );
 };
 
+const CalendarView = ({ 
+  selectedDate, 
+  setSelectedDate, 
+  userBets, 
+  generateCalendarData, 
+  calculateStats 
+}) => {
+  const calendarData = generateCalendarData();
+  const stats = calculateStats();
+  
+  const navigateMonth = (direction) => {
+    const newDate = new Date(selectedDate);
+    newDate.setMonth(selectedDate.getMonth() + direction);
+    setSelectedDate(newDate);
+  };
+
+  const getColorIntensity = (profit) => {
+    if (profit === 0) return 'bg-gray-700';
+    if (profit > 0) {
+      if (profit < 50) return 'bg-green-900';
+      if (profit < 100) return 'bg-green-700';
+      if (profit < 200) return 'bg-green-500';
+      return 'bg-green-400';
+    } else {
+      if (profit > -50) return 'bg-red-900';
+      if (profit > -100) return 'bg-red-700';
+      if (profit > -200) return 'bg-red-500';
+      return 'bg-red-400';
+    }
+  };
+
+  // Pie chart data for bet outcomes
+  const betOutcomeData = [
+    { name: 'Won', value: stats.wonBets, color: '#22c55e' },
+    { name: 'Lost', value: stats.lostBets, color: '#ef4444' },
+    { name: 'Pending', value: stats.pendingBets, color: '#eab308' }
+  ];
+
+  // Pie chart data for sportsbooks
+  const sportsbookData = userBets.reduce((acc, bet) => {
+    const existing = acc.find(item => item.name === bet.sportsBook);
+    if (existing) {
+      existing.value += 1;
+    } else {
+      acc.push({ 
+        name: bet.sportsBook, 
+        value: 1, 
+        color: `hsl(${Math.random() * 360}, 70%, 50%)` 
+      });
+    }
+    return acc;
+  }, []);
+
+  return (
+    <div className="space-y-6">
+      {/* Calendar Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-white">Betting Calendar</h1>
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => navigateMonth(-1)}
+            className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5 text-white" />
+          </button>
+          <h2 className="text-xl font-semibold text-white min-w-48 text-center">
+            {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          </h2>
+          <button
+            onClick={() => navigateMonth(1)}
+            className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+          >
+            <ChevronRight className="w-5 h-5 text-white" />
+          </button>
+        </div>
+      </div>
+
+      {/* Statistics Overview */}
+      <div className="grid grid-cols-5 gap-4">
+        <StatCard 
+          title="Total Bets" 
+          value={stats.totalBets}
+          bgColor="bg-gradient-to-br from-blue-600 to-blue-700"
+          icon={TrendingUp}
+        />
+        <StatCard 
+          title="Won Bets" 
+          value={stats.wonBets}
+          bgColor="bg-gradient-to-br from-green-600 to-green-700"
+          icon={CheckCircle}
+        />
+        <StatCard 
+          title="Lost Bets" 
+          value={stats.lostBets}
+          bgColor="bg-gradient-to-br from-red-600 to-red-700"
+          icon={XCircle}
+        />
+        <StatCard 
+          title="Win Rate" 
+          value={`${stats.winRate}%`}
+          bgColor="bg-gradient-to-br from-purple-600 to-purple-700"
+          icon={TrendingUp}
+        />
+        <StatCard 
+          title="Total Profit" 
+          value={stats.totalProfit}
+          changeType={stats.totalProfit >= 0 ? 'positive' : 'negative'}
+          bgColor="bg-gradient-to-br from-lime-600 to-lime-700"
+          icon={DollarSign}
+        />
+      </div>
+
+      {/* Calendar Grid */}
+      <div className="bg-gray-800 rounded-2xl p-6">
+        <h3 className="text-white font-semibold text-lg mb-4">Daily Performance Heatmap</h3>
+        
+        {/* Days of week header */}
+        <div className="grid grid-cols-7 gap-2 mb-2">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            <div key={day} className="text-center text-gray-400 text-sm py-2">
+              {day}
+            </div>
+          ))}
+        </div>
+        
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7 gap-2">
+          {calendarData.map((dayData, index) => (
+            <div
+              key={index}
+              className={`aspect-square flex items-center justify-center rounded text-sm font-medium relative group ${
+                dayData 
+                  ? `${getColorIntensity(dayData.performance.totalProfit)} text-white cursor-pointer hover:ring-2 hover:ring-lime-400` 
+                  : 'bg-transparent'
+              }`}
+            >
+              {dayData && (
+                <>
+                  {dayData.day}
+                  {dayData.performance.totalBets > 0 && (
+                    <div className="absolute top-1 right-1 w-2 h-2 bg-lime-400 rounded-full"></div>
+                  )}
+                  
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
+                    <div>{dayData.date.toLocaleDateString()}</div>
+                    <div>Bets: {dayData.performance.totalBets}</div>
+                    <div>W: {dayData.performance.wins} L: {dayData.performance.losses}</div>
+                    <div className={dayData.performance.totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}>
+                      ${dayData.performance.totalProfit.toFixed(2)}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        {/* Legend */}
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-gray-400 text-sm">Less</div>
+          <div className="flex space-x-1">
+            <div className="w-3 h-3 bg-gray-700 rounded-sm"></div>
+            <div className="w-3 h-3 bg-green-900 rounded-sm"></div>
+            <div className="w-3 h-3 bg-green-700 rounded-sm"></div>
+            <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
+            <div className="w-3 h-3 bg-green-400 rounded-sm"></div>
+          </div>
+          <div className="text-gray-400 text-sm">More Profit</div>
+        </div>
+      </div>
+
+      {/* Analytics Charts */}
+      <div className="grid grid-cols-2 gap-6">
+        {/* Bet Outcomes Pie Chart */}
+        <div className="bg-gray-800 rounded-2xl p-6">
+          <h3 className="text-white font-semibold text-lg mb-4">Bet Outcomes</h3>
+          {betOutcomeData.some(d => d.value > 0) ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={betOutcomeData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {betOutcomeData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#1f2937', 
+                    border: 'none', 
+                    borderRadius: '8px',
+                    color: 'white'
+                  }} 
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-64 text-gray-400">
+              No bet data available
+            </div>
+          )}
+        </div>
+
+        {/* Sportsbook Distribution */}
+        <div className="bg-gray-800 rounded-2xl p-6">
+          <h3 className="text-white font-semibold text-lg mb-4">Sportsbook Distribution</h3>
+          {sportsbookData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={sportsbookData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {sportsbookData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#1f2937', 
+                    border: 'none', 
+                    borderRadius: '8px',
+                    color: 'white'
+                  }} 
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-64 text-gray-400">
+              No sportsbook data available
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   return <Dashboard />;
 }
