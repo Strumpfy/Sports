@@ -1336,7 +1336,229 @@ const CalendarView = ({
 };
 
 function App() {
-  return <Dashboard />;
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('Events');
+  const [isAddBetModalOpen, setIsAddBetModalOpen] = useState(false);
+  const [userBets, setUserBets] = useState([]);
+  const [userTransactions, setUserTransactions] = useState(transactions);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const handleAddBet = (newBet) => {
+    const betWithStatus = {
+      ...newBet,
+      status: 'Pending',
+      dateAdded: new Date().toISOString()
+    };
+    
+    setUserBets(prev => [betWithStatus, ...prev]);
+    
+    // Add to transactions as well
+    const transaction = {
+      id: Date.now() + 1,
+      type: 'Bet Placed',
+      amount: -parseFloat(newBet.amount),
+      time: new Date().toLocaleString(),
+      game: newBet.betType || 'Bet',
+      positive: false,
+      sportsBook: newBet.sportsBook,
+      teams: newBet.teams
+    };
+    
+    setUserTransactions(prev => [transaction, ...prev.slice(0, 4)]);
+  };
+
+  const handleBetStatusChange = (betId, newStatus) => {
+    setUserBets(prev => 
+      prev.map(bet => {
+        if (bet.id === betId) {
+          const updatedBet = { ...bet, status: newStatus };
+          
+          // Add transaction for win/loss
+          if (newStatus === 'Won' || newStatus === 'Lost') {
+            const amount = newStatus === 'Won' 
+              ? parseFloat(bet.potentialPayout || bet.amount) 
+              : -parseFloat(bet.amount);
+            
+            const transaction = {
+              id: Date.now() + Math.random(),
+              type: newStatus === 'Won' ? 'Income' : 'Loss',
+              amount: amount,
+              time: new Date().toLocaleString(),
+              game: bet.betType || 'Bet',
+              positive: newStatus === 'Won',
+              sportsBook: bet.sportsBook,
+              teams: bet.teams
+            };
+            
+            setUserTransactions(prev => [transaction, ...prev.slice(0, 4)]);
+          }
+          
+          return updatedBet;
+        }
+        return bet;
+      })
+    );
+  };
+
+  // Calculate daily performance for calendar
+  const getDayPerformance = (date) => {
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+    
+    const dayBets = userBets.filter(bet => {
+      const betDate = new Date(bet.dateAdded);
+      return betDate >= dayStart && betDate <= dayEnd && bet.status !== 'Pending';
+    });
+    
+    const wins = dayBets.filter(bet => bet.status === 'Won').length;
+    const losses = dayBets.filter(bet => bet.status === 'Lost').length;
+    const totalProfit = dayBets.reduce((sum, bet) => {
+      if (bet.status === 'Won') {
+        return sum + parseFloat(bet.potentialPayout || bet.amount);
+      } else if (bet.status === 'Lost') {
+        return sum - parseFloat(bet.amount);
+      }
+      return sum;
+    }, 0);
+    
+    return { wins, losses, totalProfit, totalBets: dayBets.length };
+  };
+
+  // Generate calendar data for current month
+  const generateCalendarData = () => {
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    
+    const calendarDays = [];
+    
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      calendarDays.push(null);
+    }
+    
+    // Add days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const performance = getDayPerformance(date);
+      calendarDays.push({
+        date,
+        day,
+        performance
+      });
+    }
+    
+    return calendarDays;
+  };
+
+  // Calculate overall statistics
+  const calculateStats = () => {
+    const wonBets = userBets.filter(bet => bet.status === 'Won');
+    const lostBets = userBets.filter(bet => bet.status === 'Lost');
+    const pendingBets = userBets.filter(bet => bet.status === 'Pending');
+    
+    const totalProfit = wonBets.reduce((sum, bet) => sum + parseFloat(bet.potentialPayout || bet.amount), 0) -
+                       lostBets.reduce((sum, bet) => sum + parseFloat(bet.amount), 0);
+    
+    return {
+      totalBets: userBets.length,
+      wonBets: wonBets.length,
+      lostBets: lostBets.length,
+      pendingBets: pendingBets.length,
+      totalProfit,
+      winRate: userBets.length > 0 ? ((wonBets.length / (wonBets.length + lostBets.length)) * 100).toFixed(1) : 0
+    };
+  };
+
+  if (currentView === 'calendar') {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white">
+        <AddBetModal 
+          isOpen={isAddBetModalOpen}
+          onClose={() => setIsAddBetModalOpen(false)}
+          onAddBet={handleAddBet}
+        />
+        
+        {/* Sidebar */}
+        <div className="fixed left-0 top-0 h-full w-16 bg-gray-800 flex flex-col items-center py-6 space-y-6 z-10">
+          <div className="w-8 h-8 bg-lime-400 rounded-lg flex items-center justify-center">
+            <div className="w-4 h-4 bg-gray-900 rounded-sm"></div>
+          </div>
+          <nav className="flex flex-col space-y-4">
+            <Home 
+              className={`w-6 h-6 cursor-pointer ${currentView === 'dashboard' ? 'text-lime-400' : 'text-gray-400 hover:text-white'}`}
+              onClick={() => setCurrentView('dashboard')}
+            />
+            <TrendingUp className="w-6 h-6 text-gray-400 hover:text-white cursor-pointer" />
+            <Calendar 
+              className={`w-6 h-6 cursor-pointer ${currentView === 'calendar' ? 'text-lime-400' : 'text-gray-400 hover:text-white'}`}
+              onClick={() => setCurrentView('calendar')}
+            />
+            <Users className="w-6 h-6 text-gray-400 hover:text-white cursor-pointer" />
+            <Settings className="w-6 h-6 text-gray-400 hover:text-white cursor-pointer" />
+          </nav>
+        </div>
+
+        {/* Main Content */}
+        <div className="ml-16 p-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-bold">Betting Calendar</h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search" 
+                  className="bg-gray-800 rounded-lg pl-10 pr-4 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-lime-400"
+                />
+              </div>
+              <button 
+                onClick={() => setIsAddBetModalOpen(true)}
+                className="w-10 h-10 bg-lime-400 hover:bg-lime-500 rounded-full flex items-center justify-center transition-colors"
+                title="Add New Bet"
+              >
+                <Plus className="w-5 h-5 text-gray-900" />
+              </button>
+              <Bell className="w-6 h-6 text-gray-400" />
+            </div>
+          </div>
+
+          <CalendarView 
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            userBets={userBets}
+            generateCalendarData={generateCalendarData}
+            calculateStats={calculateStats}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Dashboard 
+      currentView={currentView}
+      setCurrentView={setCurrentView}
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      isAddBetModalOpen={isAddBetModalOpen}
+      setIsAddBetModalOpen={setIsAddBetModalOpen}
+      userBets={userBets}
+      setUserBets={setUserBets}
+      userTransactions={userTransactions}
+      setUserTransactions={setUserTransactions}
+      handleAddBet={handleAddBet}
+      handleBetStatusChange={handleBetStatusChange}
+    />
+  );
 }
 
 export default App;
