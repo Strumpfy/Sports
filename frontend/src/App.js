@@ -944,7 +944,7 @@ const Dashboard = () => {
                 <div className="space-y-3">
                   {userBets.slice(0, 3).map((bet) => (
                     <div key={bet.id} className="bg-gray-700 rounded-xl p-4">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 bg-lime-600 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-xs">
@@ -971,6 +971,43 @@ const Dashboard = () => {
                             Win: ${bet.potentialPayout || 'TBD'}
                           </div>
                         </div>
+                      </div>
+                      
+                      {/* Status Selection Buttons */}
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleBetStatusChange(bet.id, 'Won')}
+                          className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                            bet.status === 'Won' 
+                              ? 'bg-green-600 text-white' 
+                              : 'bg-gray-600 text-gray-300 hover:bg-green-600 hover:text-white'
+                          }`}
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Won</span>
+                        </button>
+                        <button
+                          onClick={() => handleBetStatusChange(bet.id, 'Lost')}
+                          className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                            bet.status === 'Lost' 
+                              ? 'bg-red-600 text-white' 
+                              : 'bg-gray-600 text-gray-300 hover:bg-red-600 hover:text-white'
+                          }`}
+                        >
+                          <XCircle className="w-4 h-4" />
+                          <span>Lost</span>
+                        </button>
+                        <button
+                          onClick={() => handleBetStatusChange(bet.id, 'Pending')}
+                          className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                            bet.status === 'Pending' 
+                              ? 'bg-yellow-600 text-white' 
+                              : 'bg-gray-600 text-gray-300 hover:bg-yellow-600 hover:text-white'
+                          }`}
+                        >
+                          <Clock className="w-4 h-4" />
+                          <span>Pending</span>
+                        </button>
                       </div>
                     </div>
                   ))}
