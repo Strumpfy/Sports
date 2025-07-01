@@ -843,7 +843,7 @@ const Dashboard = () => {
               <MoreHorizontal className="w-5 h-5 text-gray-400" />
             </div>
             <div className="space-y-4">
-              {transactions.map((transaction) => (
+              {userTransactions.slice(0, 5).map((transaction) => (
                 <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
@@ -854,6 +854,9 @@ const Dashboard = () => {
                     <div>
                       <div className="text-white font-medium">{transaction.type}</div>
                       <div className="text-gray-400 text-sm">{transaction.time}</div>
+                      {transaction.sportsBook && (
+                        <div className="text-gray-500 text-xs">{transaction.sportsBook}</div>
+                      )}
                     </div>
                   </div>
                   <div className="text-right">
@@ -861,6 +864,9 @@ const Dashboard = () => {
                       {transaction.positive ? '+' : ''}${Math.abs(transaction.amount)}
                     </div>
                     <div className="text-gray-400 text-sm">{transaction.game}</div>
+                    {transaction.teams && (
+                      <div className="text-gray-500 text-xs">{transaction.teams}</div>
+                    )}
                   </div>
                 </div>
               ))}
