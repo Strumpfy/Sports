@@ -75,6 +75,40 @@ const transactions = [
   { id: 3, type: 'Income', amount: 120, time: '21 Dec at 06:45 pm', game: 'Parlay', positive: true }
 ];
 
+const sportsBooks = [
+  'DraftKings',
+  'FanDuel', 
+  'BetMGM',
+  'Caesars',
+  'PointsBet',
+  'BetRivers',
+  'Unibet',
+  'William Hill',
+  'Other'
+];
+
+const betTypes = [
+  'Single',
+  'Parlay',
+  'Teaser',
+  'Prop Bet',
+  'Futures',
+  'Live Bet',
+  'Other'
+];
+
+const sports = [
+  'Football (NFL)',
+  'Basketball (NBA)', 
+  'Baseball (MLB)',
+  'Hockey (NHL)',
+  'Soccer (MLS)',
+  'Tennis',
+  'Golf',
+  'Boxing/MMA',
+  'Other'
+];
+
 const bestPlayers = [
   { id: 1, name: 'PSG', avatar: 'https://images.pexels.com/photos/9884917/pexels-photo-9884917.jpeg?w=40&h=40&fit=crop' },
   { id: 2, name: 'Capitals', avatar: 'https://images.unsplash.com/photo-1631607054640-876e1cd7ea27?w=40&h=40&fit=crop' },
