@@ -518,7 +518,7 @@ const Dashboard = () => {
       teams: newBet.teams
     };
     
-    setUserTransactions(prev => [transaction, ...prev]);
+    setUserTransactions(prev => [transaction, ...prev.slice(0, 4)]);
   };
 
   return (
