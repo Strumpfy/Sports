@@ -246,11 +246,11 @@ frontend:
 
   - task: "Bet Status Tracking & Calendar View"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -258,6 +258,9 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "Implemented comprehensive bet status tracking with clickable Won/Lost/Pending buttons on bet cards, calendar view with GitHub-style heatmap showing daily performance, pie charts for bet outcomes and sportsbook distribution, monthly navigation, statistics overview cards, and automatic transaction updates when bet status changes."
+      - working: true
+        agent: "testing"
+        comment: "Tested the bet status tracking and calendar view features. The calendar view loads correctly with the title 'Betting Calendar' and displays the current month. Month navigation works with the left/right chevron buttons. The calendar grid displays days of the week headers and properly numbered days. The 5 statistics cards (Total Bets, Won Bets, Lost Bets, Win Rate, Total Profit) are displayed correctly. The pie charts for Bet Outcomes and Sportsbook Distribution are present. Adding a new bet works from both dashboard and calendar views. Bet status buttons (Won, Lost, Pending) are present on bet cards and can be clicked to change status. The status changes are visually reflected with appropriate button colors (green for Won, red for Lost, yellow for Pending)."
 
 metadata:
   created_by: "main_agent"
